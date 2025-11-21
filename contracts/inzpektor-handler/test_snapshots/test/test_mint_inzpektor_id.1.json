@@ -46,6 +46,9 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
                 },
                 {
+                  "u64": "31536000"
+                },
+                {
                   "bytes": "6d6f636b5f766b"
                 },
                 {

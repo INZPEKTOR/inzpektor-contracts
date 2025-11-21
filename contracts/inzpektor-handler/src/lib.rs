@@ -28,7 +28,7 @@ impl InzpektorHandlerContract {
         e.storage().instance().set(&DataKey::InzpektorIDNFTContract, &inzpektor_id_contract);
     }
 
-    pub fn mint_inzpektor_id(e: Env, user: Address, vk_json: Bytes, proof_blob: Bytes) -> String {
+    pub fn mint_inzpektor_id(e: Env, user: Address, expires_at: u64, vk_json: Bytes, proof_blob: Bytes) -> u32 {
       let actual_admin: Address = e.storage().instance().get(&DataKey::Admin).expect("admin not set");
       actual_admin.require_auth();
 
@@ -43,18 +43,18 @@ impl InzpektorHandlerContract {
           vec![&e, vk_json.into_val(&e), proof_blob.into_val(&e)]
       );
 
-      // Proof verified successfully, mint INZPEKTOR-ID NFT
+      // Proof verified successfully, mint INZPEKTOR-ID NFT with expiration
       let inzpektor_id_contract_address: Address = e.storage().instance().get(&DataKey::InzpektorIDNFTContract).expect("INZPEKTOR-ID contract not set");
 
-      // Call mint on the NFT contract - sequential_mint only needs the recipient address
+      // Call mint on the NFT contract with recipient and expiration
       let mint_fn = Symbol::new(&e, "mint");
-      let _: () = e.invoke_contract(
+      let token_id: u32 = e.invoke_contract(
           &inzpektor_id_contract_address,
           &mint_fn,
-          vec![&e, user.into_val(&e)]
+          vec![&e, user.into_val(&e), expires_at.into_val(&e)]
       );
 
-      String::from_str(&e, "Minted INZPEKTOR-ID NFT successfully")
+      token_id
     }
 
     pub fn get_nft_balance(e: Env, user: Address) -> u32 {
@@ -120,6 +120,32 @@ impl InzpektorHandlerContract {
         );
 
         (name, symbol, base_uri)
+    }
+
+    pub fn get_nft_expiration(e: Env, token_id: u32) -> u64 {
+        let inzpektor_id_contract_address: Address = e.storage().instance().get(&DataKey::InzpektorIDNFTContract).expect("INZPEKTOR-ID contract not set");
+
+        let expiration_fn = Symbol::new(&e, "get_expiration");
+        let expiration: u64 = e.invoke_contract(
+            &inzpektor_id_contract_address,
+            &expiration_fn,
+            vec![&e, token_id.into_val(&e)]
+        );
+
+        expiration
+    }
+
+    pub fn is_nft_expired(e: Env, token_id: u32) -> bool {
+        let inzpektor_id_contract_address: Address = e.storage().instance().get(&DataKey::InzpektorIDNFTContract).expect("INZPEKTOR-ID contract not set");
+
+        let is_expired_fn = Symbol::new(&e, "is_expired");
+        let is_expired: bool = e.invoke_contract(
+            &inzpektor_id_contract_address,
+            &is_expired_fn,
+            vec![&e, token_id.into_val(&e)]
+        );
+
+        is_expired
     }
 }
 

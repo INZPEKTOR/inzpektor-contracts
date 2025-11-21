@@ -27,8 +27,9 @@ mod mock_nft {
 
     #[contractimpl]
     impl MockNFT {
-        pub fn mint(_e: Env, _to: Address) {
-            // Mock mint - does nothing
+        pub fn mint(_e: Env, _to: Address, _expires_at: u64) -> u32 {
+            // Mock mint - returns token_id 0
+            0
         }
 
         pub fn balance(_e: Env, _account: Address) -> u32 {
@@ -49,6 +50,14 @@ mod mock_nft {
 
         pub fn base_uri(e: Env) -> String {
             String::from_str(&e, "https://inzpektor.io/nft/")
+        }
+
+        pub fn get_expiration(_e: Env, _token_id: u32) -> u64 {
+            1735689600 // Mock expiration timestamp
+        }
+
+        pub fn is_expired(_e: Env, _token_id: u32) -> bool {
+            false // Mock: not expired
         }
     }
 }
@@ -96,8 +105,13 @@ fn test_mint_inzpektor_id() {
     let vk_json = Bytes::from_slice(&env, b"mock_vk");
     let proof_blob = Bytes::from_slice(&env, b"mock_proof");
 
-    let result = client.mint_inzpektor_id(&user, &vk_json, &proof_blob);
-    assert_eq!(result, String::from_str(&env, "Minted INZPEKTOR-ID NFT successfully"));
+    // Set expiration to 1 year from now
+    let current_time = env.ledger().timestamp();
+    let one_year_seconds: u64 = 365 * 24 * 60 * 60;
+    let expires_at = current_time + one_year_seconds;
+
+    let token_id = client.mint_inzpektor_id(&user, &expires_at, &vk_json, &proof_blob);
+    assert_eq!(token_id, 0); // First token should be 0
 }
 
 #[test]
@@ -178,4 +192,26 @@ fn test_getters() {
     assert_eq!(client.get_admin(), admin);
     assert_eq!(client.get_verifier_contract(), verifier_contract);
     assert_eq!(client.get_nft_contract(), nft_contract);
+}
+
+#[test]
+fn test_get_nft_expiration() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let verifier_contract = env.register(mock_verifier::MockVerifier, ());
+    let nft_contract = env.register(mock_nft::MockNFT, ());
+
+    let contract_id = env.register(InzpektorHandlerContract, ());
+    let client = InzpektorHandlerContractClient::new(&env, &contract_id);
+
+    setup_contract_storage(&client, &admin, &verifier_contract, &nft_contract);
+
+    let token_id: u32 = 0;
+    let expiration = client.get_nft_expiration(&token_id);
+    assert_eq!(expiration, 1735689600);
+
+    let is_expired = client.is_nft_expired(&token_id);
+    assert_eq!(is_expired, false);
 }
