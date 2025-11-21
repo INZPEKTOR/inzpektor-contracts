@@ -4,8 +4,17 @@ members = [
   "contracts/*",
 ]
 
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"
+
 [workspace.dependencies]
 soroban-sdk = "23"
+stellar-tokens = "=0.5.0"
+stellar-access = "=0.5.0"
+stellar-contract-utils = "=0.5.0"
+stellar-macros = "=0.5.0"
 
 [profile.release]
 opt-level = "z"
