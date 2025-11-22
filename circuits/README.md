@@ -99,19 +99,6 @@ nargo verify
 ### Output
 - `pub bool`: Returns `true` if all checks pass, `false` otherwise
 
-## Integration with Soroban
-
-The generated proof is verified by the `ultrahonk-zk` Soroban contract. The wallet address is linked at the Soroban level when minting the NFT:
-
-```rust
-// On Soroban (simplified)
-let proof_valid = verify_ultrahonk_proof(&verification_key, &proof, &public_inputs);
-
-if proof_valid {
-    // Mint INZPEKTOR-ID NFT to the caller's wallet with expiration
-    let token_id = nft_contract.mint(caller_wallet, expires_at);
-}
-```
 
 ## Test Cases
 
@@ -151,14 +138,6 @@ bb verify -k ./target/vk -p ./proofs/proof
 3. **Revocation**: Implement a mechanism to revoke proofs if compliance status changes
 4. **Proof Freshness**: Limit the validity period of generated proofs
 
-## Future Enhancements
-
-- [ ] Add timestamp constraints for data freshness
-- [ ] Add public input for wallet address binding at circuit level
-- [ ] Add support for additional compliance checks (AML, sanctions lists)
-- [ ] Implement proof batching for multiple users
-- [ ] Add revocation mechanism using nullifiers
-- [ ] Implement signature verification for compliance data providers
 
 ## Resources
 
